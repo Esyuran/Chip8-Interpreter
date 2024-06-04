@@ -3,6 +3,8 @@ mod cpu;
 extern crate sdl2;
 
 use std::collections::HashMap;
+use std::env;
+use std::path::Path;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -14,8 +16,41 @@ use sdl2::rect::Rect;
 
 pub fn main() {
 
-    let speed :u32 = 600;
-    let file_path = "test.ch8";
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 3 {
+        println!("Please provide speed and filepath as arguments.");
+        return;
+    }
+
+    let speed: u32 = match args[1].parse() {
+        Ok(n) => {
+            if n > 0 {
+                n
+            } else {
+                println!("Speed must be a positive number.");
+                return;
+            }
+        },
+        Err(_) => {
+            println!("Failed to parse speed.");
+            return;
+        },
+    };
+
+    let fileinput = &args[2];
+    let filepath : &Path = Path::new(fileinput);
+
+    if !filepath.exists() {
+        let current_dir = env::current_dir().unwrap();
+        let filepath = current_dir.join(filepath);
+        if !filepath.exists() {
+            println!("Could not find specified file.");
+            return;
+        }
+
+    }
+
 
     let mut key_map: HashMap<Keycode, usize> = HashMap::new();
 
@@ -69,7 +104,7 @@ pub fn main() {
     }
 
 
-    let (mut memory,mut registers ,mut stack, mut graphics, mut input, mut delay_timer, mut sound_timer, mut pc, mut sp, mut index) = cpu::init(file_path);
+    let (mut memory,mut registers ,mut stack, mut graphics, mut input, mut delay_timer, mut sound_timer, mut pc, mut sp, mut index) = cpu::init(&filepath);
     let mut delay_clock = 1;
 
 
